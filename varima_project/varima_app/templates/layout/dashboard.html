@@ -1,0 +1,25 @@
+{% extends "layout/base.html" %}
+
+{% block page_content %}
+<div class="page-content">
+    <h3>Profile Statistics</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Revenue</th>
+                <th>Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in datas %}
+            <tr>
+                <td>{{ data.date }}</td>
+                <td>{{ data.pendapatan }}</td>
+                <td>{{ data.modal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

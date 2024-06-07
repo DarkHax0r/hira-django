@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Mazer Admin Dashboard</title>
+    <link rel="stylesheet" href="{% static 'assets/compiled/css/app.css' %}" />
+    <link
+        rel="stylesheet"
+        href="{% static 'assets/compiled/css/app-dark.css' %}"
+    />
+    <link
+        rel="stylesheet"
+        href="{% static 'assets/compiled/css/iconly.css' %}"
+    />
+</head>
+<body>
+    <script src="{% static 'assets/static/js/initTheme.js' %}"></script>
+    <div id="app">
+        <div id="sidebar">
+            <div class="sidebar-wrapper active">
+                <div class="sidebar-header position-relative">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="logo">
+                            <a href="">
+                                <img
+                                    src="{% static 'assets/compiled/svg/logo.svg' %}"
+                                    alt="Logo"
+                                />
+                            </a>
+                        </div>
+                        <div class="theme-toggle d-flex gap-2 align-items-center mt-2">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden="true"
+                                role="img"
+                                class="iconify iconify--system-uicons"
+                                width="20"
+                                height="20"
+                                preserveAspectRatio="xMidYMid meet"
+                                viewBox="0 0 21 21"
+                            >
+                                <!-- SVG Content -->
+                            </svg>
+                            <div class="form-check form-switch fs-6">
+                                <input
+                                    class="form-check-input me-0"
+                                    type="checkbox"
+                                    id="toggle-dark"
+                                    style="cursor: pointer"
+                                />
+                                <label class="form-check-label"></label>
+                            </div>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden="true"
+                                role="img"
+                                class="iconify iconify--mdi"
+                                width="20"
+                                height="20"
+                                preserveAspectRatio="xMidYMid meet"
+                                viewBox="0 0 24 24"
+                            >
+                                <!-- SVG Content -->
+                            </svg>
+                        </div>
+                        <div class="sidebar-toggler x">
+                            <a href="#" class="sidebar-hide d-xl-none d-block"
+                               ><i class="bi bi-x bi-middle"></i
+                            ></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-menu">
+                    <ul class="menu">
+                        <li class="sidebar-title">Menu</li>
+                        <li class="sidebar-item ">
+                            <a href="{% url 'dashboard' %}" class="sidebar-link">
+                                <i class="bi bi-grid-fill"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item has-sub">
+                            <a href="" class="sidebar-link">
+                                <i class="bi bi-envelope-fill"></i>
+                                <span>Laporan</span>
+                            </a>
+                            <ul class="submenu">
+                                <li class="submenu-item">
+                                    <a href="{% url 'laporan' %}" class="submenu-link">Laporan Harian</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="{% url 'profile' %}" class="sidebar-link">
+                                <i class="bi bi-person-circle"></i>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link sidebar-link">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="main">
+            <header class="mb-3">
+                <a href="#" class="burger-btn d-block d-xl-none">
+                    <i class="bi bi-justify fs-3"></i>
+                </a>
+            </header>
+            <div class="page-heading">
+                {% block page_content %}
+                <div class="page-header">
+                    <div class="page-title">
+                        <div class="row">
+                            <div class="col-12 col-md-6 order-md-1 order-last">
+                                <h3>Menu Profile</h3>
+                            </div>
+                            <div class="col-12 col-md-6 order-md-2 order-first">
+                                <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Profile</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="xtabledm">
+                    <div class="row">
+                        <div class="col col-md-12">
+                            <div class="card">
+                                <br>
+                                <center>
+                                    <h3>Profile</h3>
+                                </center>
+                                <div class="row mb-2">
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10">
+                                        <div class="form-group">
+                                            <label for="nama">Nama</label>
+                                            <input type="text" class="form-control" id="nama" name="nama" placeholder="Nama" value="{{ user.nama }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10">
+                                        <div class="form-group">
+                                            <label for="username">Username</label>
+                                            <input type="text" class="form-control" id="username" name="username" placeholder="Username" value="{{ user.username }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10">
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            <input type="text" class="form-control" id="email" name="email" placeholder="Email" value="{{ user.email }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-1"></div>
+                                    <div class="col col-md-10">
+                                        <form action="{% url 'profile_update_password' %}" method="post">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <label for="new_password">Password Baru</label>
+                                                <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Password Baru" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="confirm_password">Konfirmasi Password Baru</label>
+                                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Konfirmasi Password Baru" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary" style="width: 100%">Update Password</button>
+                                            <br>
+                                        </form>
+                                    </div>
+                                    <div class="col col-md-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+            </div>
+     
+                <script src="{% static 'assets/static/js/components/dark.js' %}"></script>
+                <script src="{% static 'assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
+                <script src="{% static 'assets/compiled/js/app.js' %}"></script>
+                <script src="{% static 'assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
+                <script src="{% static 'assets/static/js/pages/dashboard.js' %}"></script>
+                <script>
+                    // Script untuk mengelola dropdown
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const submenuLinks = document.querySelectorAll('.sidebar-item.has-sub > a');
+                        submenuLinks.forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const parent = this.parentElement;
+                                parent.classList.toggle('active');
+                                const submenu = parent.querySelector('.submenu');
+                                if (submenu) {
+                                    submenu.classList.toggle('d-none');
+                                }
+                            });
+                        });
+                    });
+                </script>
+            <footer>
+                <div class="footer clearfix mb-0 text-muted">
+                    <div class="float-start">
+                        <p>2023 &copy; Mazer</p>
+                    </div>
+                    <div class="float-end">
+                        <p>
+                            Crafted with
+                            <span class="text-danger"
+                            ><i class="bi bi-heart-fill icon-mid"></i
+                                ></span>
+                            by <a href="https://saugi.me">Saugi</a>
+                        </p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <script src="{% static 'assets/static/js/components/dark.js' %}"></script>
+    <script src="{% static 'assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
+    <script src="{% static 'assets/compiled/js/app.js' %}"></script>
+    <script src="{% static 'assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
+    <script src="{% static 'assets/static/js/pages/dashboard.js' %}"></script>
+</body>
+</html>
