@@ -8,8 +8,8 @@ Deskripsi singkat tentang proyek Anda di sini.
 2. Gunakan pip untuk menginstal Django dengan perintah:
    pip install django
 3. Clone repositori ini ke komputer Anda:
-   [git clone](https://github.com/DarkHax0r/hira-django.git)
-4. Navigasikan ke direktori proyek dengan menggunakan perintah `cd hira-django`.
+    git clone https://github.com/DarkHax0r/hira-django.git
+4. Navigasikan ke direktori proyek dengan menggunakan perintah cd hira-django.
 
 ## Penggunaan
 
