@@ -160,6 +160,7 @@
                                             </div>
                                         {% endfor %}
                                     {% endif %}
+                                    
                                     <table class="table table-striped" id="table1">
                                         <thead>
                                             <tr>
@@ -182,7 +183,87 @@
                                     </table>
                                 </div>
                             </div>
-                            
+                
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="accordion" id="accordionExample">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingOne">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                    Hasil Uji ADF
+                                                </button>
+                                            </h2>
+                                            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                                <div class="accordion-body">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <header>Hasil Uji ADF Pendapatan</header>
+                                                            <table class="table">
+                                                                <tr><th>Test Statistic</th><td>{{ adf_pendapatan.Test_Statistic }}</td></tr>
+                                                                <tr><th>p-value</th><td>{{ adf_pendapatan.p_value }}</td></tr>
+                                                                <tr><th>Used Lag</th><td>{{ adf_pendapatan.Used_Lag }}</td></tr>
+                                                                <tr><th>Number of Observations Used</th><td>{{ adf_pendapatan.Number_of_Observations_Used }}</td></tr>
+                                                                <tr><th>Critical Values</th><td>
+                                                                    {% for key, value in adf_pendapatan.Critical_Values.items %}
+                                                                        {{ key }}: {{ value }}<br>
+                                                                    {% endfor %}
+                                                                </td></tr>
+                                                                <tr><th>IC Best</th><td>{{ adf_pendapatan.IC_Best }}</td></tr>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="card mt-3">
+                                                        <div class="card-body">
+                                                            <header>Hasil Uji ADF Modal</header>
+                                                            <table class="table">
+                                                                <tr><th>Test Statistic</th><td>{{ adf_modal.Test_Statistic }}</td></tr>
+                                                                <tr><th>p-value</th><td>{{ adf_modal.p_value }}</td></tr>
+                                                                <tr><th>Used Lag</th><td>{{ adf_modal.Used_Lag }}</td></tr>
+                                                                <tr><th>Number of Observations Used</th><td>{{ adf_modal.Number_of_Observations_Used }}</td></tr>
+                                                                <tr><th>Critical Values</th><td>
+                                                                    {% for key, value in adf_modal.Critical_Values.items %}
+                                                                        {{ key }}: {{ value }}<br>
+                                                                    {% endfor %}
+                                                                </td></tr>
+                                                                <tr><th>IC Best</th><td>{{ adf_modal.IC_Best }}</td></tr>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="accordion" id="accordionExample">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingOne">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne">
+                                                    Hasil Identifikasi Model
+                                                </button>
+                                            </h2>
+                                            <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                                <div class="accordion-body">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <header>Identifikasi Model VARIMA</header>
+                                                            <table class="table">
+                                                                <tr><th>Best Order</th><td>{{ varima_order }}</td></tr>
+                                                                <tr><th>AIC</th><td>{{ varima_aic }}</td></tr>
+                                                                <tr><th>BIC</th><td>{{ varima_bic }}</td></tr>
+                                                            </table> 
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>                      
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
