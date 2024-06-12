@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import statsmodels.api as sm
 import statsmodels.tsa.api as tsa
 
+
 def load_data():
     data = ParfumData.objects.all().values("date", "pendapatan", "modal")
     df = pd.DataFrame(data)
@@ -26,6 +27,7 @@ def load_data():
 
     return df
 
+
 def analyze_data(df, steps):
     df_diff = df.diff().dropna()
     model = VAR(df_diff)
@@ -34,7 +36,9 @@ def analyze_data(df, steps):
     fc = model_fitted.forecast(y=forecast_input, steps=steps)
     df_forecast = pd.DataFrame(
         fc,
-        index=pd.date_range(start=df.index[-1] + timedelta(days=1), periods=steps, freq="D"),
+        index=pd.date_range(
+            start=df.index[-1] + timedelta(days=1), periods=steps, freq="D"
+        ),
         columns=df.columns,
     )
 
@@ -50,35 +54,36 @@ def analyze_data(df, steps):
 
 @login_required
 def dashboard(request):
-    month_choices = [(i, datetime(2000, i, 1).strftime('%B')) for i in range(1, 13)]
+    month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)]
     year_choices = list(range(2023, 2031))
 
     if request.method == "POST":
         month = int(request.POST.get("month"))
         year = int(request.POST.get("year"))
-        
+
         df = load_data()
-        
+
         # Determine the start and end dates
         start_date = df.index[-1] + timedelta(days=1)
         if month < 12:
             end_date = datetime(year, month + 1, 1) - timedelta(days=1)
         else:
             end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
-        
+
         total_days = (end_date - start_date).days + 1
-        
+
         forecast_data = analyze_data(df, steps=total_days)
 
         forecast_data = forecast_data.reset_index()
-        forecast_data.columns = ['date', 'pendapatan', 'modal']
-        
+        forecast_data.columns = ["date", "pendapatan", "modal"]
+
         # Filter the forecast data to include only the selected month and year
-        forecast_data['date'] = pd.to_datetime(forecast_data['date'])
+        forecast_data["date"] = pd.to_datetime(forecast_data["date"])
         forecast_data_filtered = forecast_data[
-            (forecast_data['date'].dt.month == month) & (forecast_data['date'].dt.year == year)
+            (forecast_data["date"].dt.month == month)
+            & (forecast_data["date"].dt.year == year)
         ]
-        forecast_data_dict = forecast_data_filtered.to_dict('records')
+        forecast_data_dict = forecast_data_filtered.to_dict("records")
 
         context = {
             "forecast_data": forecast_data_dict,
@@ -86,13 +91,14 @@ def dashboard(request):
             "year_choices": year_choices,
         }
         return render(request, "dashboard/dashboard.html", context)
-    
+
     context = {
         "forecast_data": [],
         "month_choices": month_choices,
         "year_choices": year_choices,
     }
     return render(request, "dashboard/dashboard.html", context)
+
 
 def login_view(request):
     if request.method == "POST":
@@ -110,50 +116,65 @@ def login_view(request):
             )
     return render(request, "varima_app/login.html")
 
+
 def get_data():
-    data = ParfumData.objects.all().values('date', 'pendapatan', 'modal')
-    df = pd.DataFrame(list(data))
-    df['date'] = pd.to_datetime(df['date'])
-    df.set_index('date', inplace=True)
+    data = ParfumData.objects.all().values("date", "pendapatan", "modal")
+    if not data.exists():
+        raise ValueError("No data available in ParfumData model")
+    
+    df = pd.DataFrame(data)
+    
+    if "date" not in df.columns:
+        raise KeyError("Kolom 'date' tidak ditemukan dalam data")
+
+    df["date"] = pd.to_datetime(df["date"])
+    df.set_index("date", inplace=True)
+    
     return df
+
+
 
 def adf_test(series):
     result = adfuller(series)
     return {
-        'Test_Statistic': result[0],
-        'p_value': result[1],
-        'Used_Lag': result[2],
-        'Number_of_Observations_Used': result[3],
-        'Critical_Values': result[4],
-        'IC_Best': result[5]
+        "Test_Statistic": result[0],
+        "p_value": result[1],
+        "Used_Lag": result[2],
+        "Number_of_Observations_Used": result[3],
+        "Critical_Values": result[4],
+        "IC_Best": result[5],
     }
+
 
 def adf_view(request):
     df = get_data()
-    adf_pendapatan = adf_test(df['pendapatan'])
-    adf_modal = adf_test(df['modal'])
+    adf_pendapatan = adf_test(df["pendapatan"])
+    adf_modal = adf_test(df["modal"])
 
     response_data = {
-        'adf_pendapatan': adf_pendapatan,
-        'adf_modal': adf_modal,
+        "adf_pendapatan": adf_pendapatan,
+        "adf_modal": adf_modal,
     }
-    
+
     return JsonResponse(response_data)
+
 
 def identify_varima_order(df):
     p = range(0, 5)
     d = range(0, 2)
     q = range(0, 5)
 
-    best_aic = float('inf')
+    best_aic = float("inf")
     best_order = None
     best_model = None
-    
+
     for i in p:
         for j in d:
             for k in q:
                 try:
-                    model = tsa.VARMAX(df, order=(i, k), trend='c', error_cov_type='diagonal').fit(disp=False)
+                    model = tsa.VARMAX(
+                        df, order=(i, k), trend="c", error_cov_type="diagonal"
+                    ).fit(disp=False)
                     if model.aic < best_aic:
                         best_aic = model.aic
                         best_order = (i, j, k)
@@ -162,26 +183,35 @@ def identify_varima_order(df):
                     continue
     return best_order, best_model
 
+
 @login_required
 def laporan(request):
-    data = ParfumData.objects.all()
-    
-    df = get_data()
-    adf_pendapatan = adf_test(df['pendapatan'])
-    adf_modal = adf_test(df['modal'])
-    
-    best_order, best_model = identify_varima_order(df)
-    
-    context = {
-        "parfum": data,
-        "adf_pendapatan": adf_pendapatan,
-        "adf_modal": adf_modal,
-        "varima_order": best_order,
-        "varima_aic": best_model.aic if best_model else None,
-        "varima_bic": best_model.bic if best_model else None,
-    }
-    
+    try:
+        data = ParfumData.objects.all()
+        df = get_data()
+        adf_pendapatan = adf_test(df["pendapatan"])
+        adf_modal = adf_test(df["modal"])
+        best_order, best_model = identify_varima_order(df)
+
+        context = {
+            "parfum": data,
+            "adf_pendapatan": adf_pendapatan,
+            "adf_modal": adf_modal,
+            "varima_order": best_order,
+            "varima_aic": best_model.aic if best_model else None,
+            "varima_bic": best_model.bic if best_model else None,
+        }
+
+    except KeyError as e:
+        messages.error(request, f"Kolom yang diperlukan tidak ditemukan: {e}")
+        context = {}
+
+    except ValueError as e:
+        messages.error(request, f"Kesalahan dalam pengambilan data: {e}")
+        context = {}
+
     return render(request, "laporan/laporan.html", context)
+
 
 
 @login_required
@@ -196,61 +226,60 @@ def laporan_add(request):
         return redirect("laporan")
     return redirect("laporan")
 
+
 @login_required
 def laporan_import(request):
     if request.method == "POST":
-        file = request.FILES['file']
+        file = request.FILES["file"]
         try:
             # Membaca file Excel
             df = pd.read_excel(file)
-            
+
             # Mencari kolom yang sesuai dengan mengabaikan case sensitivity
-            col_map = {
-                'Tanggal': None,
-                'Pendapatan': None,
-                'Modal': None
-            }
+            col_map = {"Tanggal": None, "Pendapatan": None, "Modal": None}
             for col in df.columns:
                 lower_col = col.lower()
-                if 'tanggal' in lower_col:
-                    col_map['Tanggal'] = col
-                elif 'pendapatan' in lower_col:
-                    col_map['Pendapatan'] = col
-                elif 'modal' in lower_col:
-                    col_map['Modal'] = col
-            
-            # Pastikan kolom-kolom yang dibutuhkan ada
+                if "tanggal" in lower_col:
+                    col_map["Tanggal"] = col
+                elif "pendapatan" in lower_col:
+                    col_map["Pendapatan"] = col
+                elif "modal" in lower_col:
+                    col_map["Modal"] = col
+
             if not all(col_map.values()):
                 missing_cols = [key for key, value in col_map.items() if value is None]
-                messages.error(request, f"Kolom berikut tidak ditemukan: {', '.join(missing_cols)}")
+                messages.error(
+                    request, f"Kolom berikut tidak ditemukan: {', '.join(missing_cols)}"
+                )
                 return redirect("laporan")
-            
-            # Mengubah nama kolom agar sesuai dengan model
-            df.rename(columns={
-                col_map['Tanggal']: 'date',
-                col_map['Pendapatan']: 'pendapatan',
-                col_map['Modal']: 'modal'
-            }, inplace=True)
-            
-            # Mengonversi kolom tanggal ke format datetime
-            df['date'] = pd.to_datetime(df['date'], errors='coerce')
-            
-            # Memastikan semua kolom lainnya ke tipe numerik
-            df['pendapatan'] = pd.to_numeric(df['pendapatan'], errors='coerce')
-            df['modal'] = pd.to_numeric(df['modal'], errors='coerce')
-            
-            # Menghapus baris dengan nilai yang hilang
-            df.dropna(subset=['date', 'pendapatan', 'modal'], inplace=True)
-            
-            # Menyimpan data ke dalam database
+
+            df.rename(
+                columns={
+                    col_map["Tanggal"]: "date",
+                    col_map["Pendapatan"]: "pendapatan",
+                    col_map["Modal"]: "modal",
+                },
+                inplace=True,
+            )
+
+            df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+            df["pendapatan"] = pd.to_numeric(df["pendapatan"], errors="coerce")
+            df["modal"] = pd.to_numeric(df["modal"], errors="coerce")
+
+            df.dropna(subset=["date", "pendapatan", "modal"], inplace=True)
+
             for row in df.itertuples():
-                ParfumData.objects.create(date=row.date, pendapatan=row.pendapatan, modal=row.modal)
-                
+                ParfumData.objects.create(
+                    date=row.date, pendapatan=row.pendapatan, modal=row.modal
+                )
+
             messages.success(request, "Data berhasil diimpor!")
         except Exception as e:
             messages.error(request, f"Terjadi kesalahan: {str(e)}")
         return redirect("laporan")
     return redirect("laporan")
+
 
 @login_required
 def laporan_kosongkan(request):
@@ -263,20 +292,24 @@ def laporan_kosongkan(request):
         return redirect("laporan")
     return redirect("laporan")
 
+
 @login_required
 def profile_view(request):
-    return render(request, 'profile/profile.html', {'user': request.user})
+    return render(request, "profile/profile.html", {"user": request.user})
+
 
 @login_required
 def update_password(request):
-    if request.method == 'POST':
-        new_password = request.POST['new_password']
-        confirm_password = request.POST['confirm_password']
+    if request.method == "POST":
+        new_password = request.POST["new_password"]
+        confirm_password = request.POST["confirm_password"]
         if new_password == confirm_password:
             request.user.set_password(new_password)
             request.user.save()
-            update_session_auth_hash(request, request.user)  # This is the key to keep the user logged in
-            messages.success(request, 'Password berhasil diperbarui!')
+            update_session_auth_hash(
+                request, request.user
+            )  # This is the key to keep the user logged in
+            messages.success(request, "Password berhasil diperbarui!")
         else:
-            messages.error(request, 'Password tidak cocok!')
-    return redirect('profile')
+            messages.error(request, "Password tidak cocok!")
+    return redirect("profile")
