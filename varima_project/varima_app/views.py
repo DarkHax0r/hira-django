@@ -17,121 +17,13 @@ def load_data():
     data = ParfumData.objects.all().values("date", "pendapatan", "modal")
     df = pd.DataFrame(data)
 
-    # Pastikan kolom 'date' menjadi index dan pastikan formatnya benar
     df["date"] = pd.to_datetime(df["date"])
     df.set_index("date", inplace=True)
 
-    # Konversi kolom ke tipe numerik
     df["pendapatan"] = pd.to_numeric(df["pendapatan"], errors="coerce")
     df["modal"] = pd.to_numeric(df["modal"], errors="coerce")
 
     return df
-
-
-def analyze_data(df, steps):
-    df_diff = df.diff().dropna()
-    model = VAR(df_diff)
-    model_fitted = model.fit(2)  # Assume the optimal lag is 2
-    forecast_input = df_diff.values[-2:]
-    fc = model_fitted.forecast(y=forecast_input, steps=steps)
-    df_forecast = pd.DataFrame(
-        fc,
-        index=pd.date_range(
-            start=df.index[-1] + timedelta(days=1), periods=steps, freq="D"
-        ),
-        columns=df.columns,
-    )
-
-    def invert_transformation(df_train, df_forecast):
-        df_fc = df_forecast.copy()
-        for col in df_train.columns:
-            df_fc[col] = df_train[col].iloc[-1] + df_fc[col].cumsum()
-        return df_fc
-
-    df_results = invert_transformation(df, df_forecast)
-    return df_results
-
-
-@login_required
-def dashboard(request):
-    month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)]
-    year_choices = list(range(2023, 2031))
-
-    if request.method == "POST":
-        month = int(request.POST.get("month"))
-        year = int(request.POST.get("year"))
-
-        df = load_data()
-
-        # Determine the start and end dates
-        start_date = df.index[-1] + timedelta(days=1)
-        if month < 12:
-            end_date = datetime(year, month + 1, 1) - timedelta(days=1)
-        else:
-            end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
-
-        total_days = (end_date - start_date).days + 1
-
-        forecast_data = analyze_data(df, steps=total_days)
-
-        forecast_data = forecast_data.reset_index()
-        forecast_data.columns = ["date", "pendapatan", "modal"]
-
-        # Filter the forecast data to include only the selected month and year
-        forecast_data["date"] = pd.to_datetime(forecast_data["date"])
-        forecast_data_filtered = forecast_data[
-            (forecast_data["date"].dt.month == month)
-            & (forecast_data["date"].dt.year == year)
-        ]
-        forecast_data_dict = forecast_data_filtered.to_dict("records")
-
-        context = {
-            "forecast_data": forecast_data_dict,
-            "month_choices": month_choices,
-            "year_choices": year_choices,
-        }
-        return render(request, "dashboard/dashboard.html", context)
-
-    context = {
-        "forecast_data": [],
-        "month_choices": month_choices,
-        "year_choices": year_choices,
-    }
-    return render(request, "dashboard/dashboard.html", context)
-
-
-def login_view(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return redirect("dashboard")
-        else:
-            return render(
-                request, "varima_app/login.html", {"error": "Invalid credentials"}
-            )
-    return render(request, "varima_app/login.html")
-
-
-def get_data():
-    data = ParfumData.objects.all().values("date", "pendapatan", "modal")
-    if not data.exists():
-        raise ValueError("No data available in ParfumData model")
-    
-    df = pd.DataFrame(data)
-    
-    if "date" not in df.columns:
-        raise KeyError("Kolom 'date' tidak ditemukan dalam data")
-
-    df["date"] = pd.to_datetime(df["date"])
-    df.set_index("date", inplace=True)
-    
-    return df
-
 
 
 def adf_test(series):
@@ -144,19 +36,6 @@ def adf_test(series):
         "Critical_Values": result[4],
         "IC_Best": result[5],
     }
-
-
-def adf_view(request):
-    df = get_data()
-    adf_pendapatan = adf_test(df["pendapatan"])
-    adf_modal = adf_test(df["modal"])
-
-    response_data = {
-        "adf_pendapatan": adf_pendapatan,
-        "adf_modal": adf_modal,
-    }
-
-    return JsonResponse(response_data)
 
 
 def identify_varima_order(df):
@@ -185,10 +64,56 @@ def identify_varima_order(df):
 
 
 @login_required
+def dashboard(request):
+    month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)]
+    year_choices = list(range(2023, 2031))
+
+    if request.method == "POST":
+        month = int(request.POST.get("month"))
+        year = int(request.POST.get("year"))
+
+        df = load_data()
+
+        start_date = df.index[-1] + timedelta(days=1)
+        if month < 12:
+            end_date = datetime(year, month + 1, 1) - timedelta(days=1)
+        else:
+            end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
+
+        total_days = (end_date - start_date).days + 1
+
+        forecast_data = analyze_data(df, steps=total_days)
+
+        forecast_data = forecast_data.reset_index()
+        forecast_data.columns = ["date", "pendapatan", "modal"]
+
+        forecast_data["date"] = pd.to_datetime(forecast_data["date"])
+        forecast_data_filtered = forecast_data[
+            (forecast_data["date"].dt.month == month)
+            & (forecast_data["date"].dt.year == year)
+        ]
+        forecast_data_dict = forecast_data_filtered.to_dict("records")
+
+        context = {
+            "forecast_data": forecast_data_dict,
+            "month_choices": month_choices,
+            "year_choices": year_choices,
+        }
+        return render(request, "dashboard/dashboard.html", context)
+
+    context = {
+        "forecast_data": [],
+        "month_choices": month_choices,
+        "year_choices": year_choices,
+    }
+    return render(request, "dashboard/dashboard.html", context)
+
+
+@login_required
 def laporan(request):
     try:
         data = ParfumData.objects.all()
-        df = get_data()
+        df = load_data()
         adf_pendapatan = adf_test(df["pendapatan"])
         adf_modal = adf_test(df["modal"])
         best_order, best_model = identify_varima_order(df)
@@ -212,6 +137,47 @@ def laporan(request):
 
     return render(request, "laporan/laporan.html", context)
 
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect("dashboard")
+        else:
+            return render(
+                request, "varima_app/login.html", {"error": "Invalid credentials"}
+            )
+    return render(request, "varima_app/login.html")
+
+
+# The analyze_data function was not intended to be a view, it's used internally
+def analyze_data(df, steps):
+    df_diff = df.diff().dropna()
+    model = VAR(df_diff)
+    model_fitted = model.fit(2)  # Assume the optimal lag is 2
+    forecast_input = df_diff.values[-2:]
+    fc = model_fitted.forecast(y=forecast_input, steps=steps)
+    df_forecast = pd.DataFrame(
+        fc,
+        index=pd.date_range(
+            start=df.index[-1] + timedelta(days=1), periods=steps, freq="D"
+        ),
+        columns=df.columns,
+    )
+
+    def invert_transformation(df_train, df_forecast):
+        df_fc = df_forecast.copy()
+        for col in df_train.columns:
+            df_fc[col] = df_train[col].iloc[-1] + df_fc[col].cumsum()
+        return df_fc
+
+    df_results = invert_transformation(df, df_forecast)
+    return df_results
 
 
 @login_required
