@@ -9,8 +9,11 @@ from django.contrib.auth import update_session_auth_hash
 from statsmodels.tsa.stattools import adfuller
 from django.http import JsonResponse
 from datetime import datetime, timedelta
-import statsmodels.api as sm
 import statsmodels.tsa.api as tsa
+from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch, normal_ad
+from statsmodels.stats.stattools import durbin_watson
+import numpy as np
+
 
 
 def load_data():
@@ -63,6 +66,70 @@ def identify_varima_order(df):
     return best_order, best_model
 
 
+def estimate_varima(df):
+    p = range(1, 16)  # Range of p values to test
+    q = range(1, 16)  # Range of p values to test
+    best_aic = float("inf")
+    best_bic = float("inf")
+    best_order = None
+    best_model = None
+
+    for i in p:
+        try:
+            model = VAR(df)
+            results = model.fit(maxlags=i, ic='aic')
+            aic_value = results.aic
+            bic_value = results.bic
+
+            if aic_value < best_aic:
+                best_aic = aic_value
+                best_bic = bic_value
+                best_order = i
+                best_model = results
+        except:
+            continue
+
+    return best_model, best_aic, best_bic
+
+def diagnostic_model(varima_results):
+    diagnostics = {}
+    residuals = varima_results.resid
+
+    for column in residuals.columns:
+        res = residuals[column].dropna()
+
+        # Uji Ljung-Box
+        lb_test_stat, lb_p_value = acorr_ljungbox(res, lags=[10], return_df=False)
+        
+        # Debugging: Print the results of Ljung-Box Test
+        print(f"Ljung-Box Test Statistic for {column}: {lb_test_stat}")
+        print(f"Ljung-Box p-value for {column}: {lb_p_value}")
+
+        # Ensure the results are numpy arrays before accessing .size
+        if isinstance(lb_test_stat, (list, np.ndarray)) and isinstance(lb_p_value, (list, np.ndarray)):
+            lb_test_stat = lb_test_stat[0] if lb_test_stat.size > 0 else None
+            lb_p_value = lb_p_value[0] if lb_p_value.size > 0 else None
+        else:
+            lb_test_stat = None
+            lb_p_value = None
+
+        # Uji Jarque-Bera untuk normalitas
+        jb_test_stat, jb_p_value = normal_ad(res)
+        
+        # Durbin-Watson Test
+        dw_test_stat = durbin_watson(res)
+
+        diagnostics[column] = {
+            "ljung_box_stat": lb_test_stat,
+            "ljung_box_p_value": lb_p_value,
+            "jarque_bera_stat": jb_test_stat,
+            "jarque_bera_p_value": jb_p_value,
+            "durbin_watson_stat": dw_test_stat,
+        }
+    
+    return diagnostics
+
+
 @login_required
 def dashboard(request):
     month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)]
@@ -70,8 +137,7 @@ def dashboard(request):
 
     if request.method == "POST":
         month = int(request.POST.get("month"))
-        year = int(request.POST.get("year"))
-
+        year = 2024
         df = load_data()
 
         start_date = df.index[-1] + timedelta(days=1)
@@ -108,7 +174,6 @@ def dashboard(request):
     }
     return render(request, "dashboard/dashboard.html", context)
 
-
 @login_required
 def laporan(request):
     try:
@@ -116,15 +181,21 @@ def laporan(request):
         df = load_data()
         adf_pendapatan = adf_test(df["pendapatan"])
         adf_modal = adf_test(df["modal"])
-        best_order, best_model = identify_varima_order(df)
+
+        varima_results, varima_aic, varima_bic = estimate_varima(df)
+        varima_params = varima_results.params
+
+        # Hasil diagnostik model
+        diagnostics = diagnostic_model(varima_results)
 
         context = {
             "parfum": data,
             "adf_pendapatan": adf_pendapatan,
             "adf_modal": adf_modal,
-            "varima_order": best_order,
-            "varima_aic": best_model.aic if best_model else None,
-            "varima_bic": best_model.bic if best_model else None,
+            "varima_aic": varima_aic,
+            "varima_bic": varima_bic,
+            "varima_params": varima_params.to_dict(),
+            "diagnostics": diagnostics,
         }
 
     except KeyError as e:
@@ -136,6 +207,7 @@ def laporan(request):
         context = {}
 
     return render(request, "laporan/laporan.html", context)
+
 
 
 def login_view(request):
