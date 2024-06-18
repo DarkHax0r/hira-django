@@ -13,8 +13,8 @@ import statsmodels.tsa.api as tsa
 from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch, normal_ad
 from statsmodels.stats.stattools import durbin_watson
 import numpy as np
-from darts.models import VARIMA
 from darts import TimeSeries
+from darts.models import VARIMA
 
 
 
@@ -176,7 +176,6 @@ def dashboard(request):
     }
     return render(request, "dashboard/dashboard.html", context)
 
-
 @login_required
 def laporan(request):
     try:
@@ -230,25 +229,23 @@ def login_view(request):
     return render(request, "varima_app/login.html")
 
 
-# The analyze_data function was not intended to be a view, it's used internally
+# Fungsi analyze_data yang dimodifikasi menggunakan darts
 def analyze_data(df, steps):
-    # Create a TimeSeries object from the dataframe
     series = TimeSeries.from_dataframe(df)
-    
-    # Initialize and fit the VARIMA model
     model = VARIMA()
     model.fit(series)
-    
-    # Forecasting
     forecast = model.predict(steps)
-    
-    # Convert forecast to DataFrame
+
     forecast_df = forecast.pd_dataframe()
-    
-    # Ensure index is date range starting from the next day after the last date in the original dataframe
-    forecast_df.index = pd.date_range(start=df.index[-1] + timedelta(days=1), periods=steps, freq="D")
-    
-    return forecast_df
+
+    def invert_transformation(df_train, df_forecast):
+        df_fc = df_forecast.copy()
+        for col in df_train.columns:
+            df_fc[col] = df_train[col].iloc[-1] + df_fc[col].cumsum()
+        return df_fc
+
+    df_results = invert_transformation(df, forecast_df)
+    return df_results
 
 
 @login_required
