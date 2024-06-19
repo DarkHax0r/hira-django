@@ -4,7 +4,7 @@
     {% load static %}
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Mazer Admin Dashboard</title>
+    <title>Profile</title>
     <link rel="stylesheet" href="{% static 'assets/compiled/css/app.css' %}" />
     <link
         rel="stylesheet"
@@ -22,14 +22,14 @@
             <div class="sidebar-wrapper active">
                 <div class="sidebar-header position-relative">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="logo">
+                        <!-- <div class="logo">
                             <a href="">
                                 <img
                                     src="{% static 'assets/compiled/svg/logo.svg' %}"
                                     alt="Logo"
                                 />
                             </a>
-                        </div>
+                        </div> -->
                         <div class="theme-toggle d-flex gap-2 align-items-center mt-2">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -75,24 +75,19 @@
                 <div class="sidebar-menu">
                     <ul class="menu">
                         <li class="sidebar-title">Menu</li>
+                        <li class="sidebar-item">
+                            <a href="{% url 'laporan' %}" class="sidebar-link">
+                                <i class="bi bi-envelope-fill"></i>
+                                <span>Laporan Harian</span>
+                            </a>
+                        </li>
                         <li class="sidebar-item ">
                             <a href="{% url 'dashboard' %}" class="sidebar-link">
                                 <i class="bi bi-grid-fill"></i>
-                                <span>Dashboard</span>
+                                <span>Prediksi</span>
                             </a>
                         </li>
-                        <li class="sidebar-item has-sub">
-                            <a href="" class="sidebar-link">
-                                <i class="bi bi-envelope-fill"></i>
-                                <span>Laporan</span>
-                            </a>
-                            <ul class="submenu">
-                                <li class="submenu-item">
-                                    <a href="{% url 'laporan' %}" class="submenu-link">Laporan Harian</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="sidebar-item">
+                        <li class="sidebar-item active">
                             <a href="{% url 'profile' %}" class="sidebar-link">
                                 <i class="bi bi-person-circle"></i>
                                 <span>Profile</span>
@@ -236,16 +231,9 @@
             <footer>
                 <div class="footer clearfix mb-0 text-muted">
                     <div class="float-start">
-                        <p>2023 &copy; Mazer</p>
+                        <p>2023 &copy; Hira Nur Afifah</p>
                     </div>
                     <div class="float-end">
-                        <p>
-                            Crafted with
-                            <span class="text-danger"
-                            ><i class="bi bi-heart-fill icon-mid"></i
-                                ></span>
-                            by <a href="https://saugi.me">Saugi</a>
-                        </p>
                     </div>
                 </div>
             </footer>
