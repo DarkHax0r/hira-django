@@ -1,4 +1,5 @@
 import pandas as pd
+from statsmodels.tsa.api import VARMAX
 from statsmodels.tsa.api import VAR
 from .models import ParfumData
 from django.shortcuts import render, redirect
@@ -13,8 +14,7 @@ import statsmodels.tsa.api as tsa
 from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch, normal_ad
 from statsmodels.stats.stattools import durbin_watson
 import numpy as np
-from darts import TimeSeries
-from darts.models import VARIMA
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -131,7 +131,6 @@ def diagnostic_model(varima_results):
     
     return diagnostics
 
-
 @login_required
 def dashboard(request):
     month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)]
@@ -229,14 +228,27 @@ def login_view(request):
     return render(request, "varima_app/login.html")
 
 
-# Fungsi analyze_data yang dimodifikasi menggunakan darts
 def analyze_data(df, steps):
-    series = TimeSeries.from_dataframe(df)
-    model = VARIMA()
-    model.fit(series)
-    forecast = model.predict(steps)
+    # Normalize the data
+    scaler = StandardScaler()
+    df_scaled = pd.DataFrame(scaler.fit_transform(df), columns=df.columns, index=df.index)
 
-    forecast_df = forecast.pd_dataframe()
+    # Differencing to remove trend
+    df_diff = df_scaled.diff().dropna()
+
+    # Fit the VARMAX model
+    try:
+        model = VARMAX(df_diff, order=(1, 0), trend="c", error_cov_type="diagonal")
+        model_fitted = model.fit(disp=False)
+    except np.linalg.LinAlgError:
+        # In case of a non-positive definite matrix, add regularization
+        model = VARMAX(df_diff, order=(1, 0), trend="c", error_cov_type="diagonal")
+        model_fitted = model.fit(disp=False)
+
+    # Forecast
+    fc = model_fitted.get_forecast(steps=steps)
+    df_forecast = fc.predicted_mean
+    df_forecast = pd.DataFrame(df_forecast, index=pd.date_range(start=df.index[-1] + timedelta(days=1), periods=steps, freq="D"), columns=df.columns)
 
     def invert_transformation(df_train, df_forecast):
         df_fc = df_forecast.copy()
@@ -244,7 +256,11 @@ def analyze_data(df, steps):
             df_fc[col] = df_train[col].iloc[-1] + df_fc[col].cumsum()
         return df_fc
 
-    df_results = invert_transformation(df, forecast_df)
+    df_results = invert_transformation(df_scaled, df_forecast)
+
+    # Reverse normalization
+    df_results = pd.DataFrame(scaler.inverse_transform(df_results), columns=df.columns, index=df_results.index)
+
     return df_results
 
 

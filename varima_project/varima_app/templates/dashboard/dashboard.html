@@ -200,7 +200,7 @@
                                     <h4>Line Chart</h4>
                                 </div>
                                 <div class="card-body">
-                                    <div id=""></div>
+                                    <div id="lineChart"></div> <!-- Updated div with id -->
                                 </div>
                             </div>
                         </div>
@@ -231,6 +231,28 @@
     <script src="{% static 'assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
     <script src="{% static 'assets/compiled/js/app.js' %}"></script>
     <script src="{% static 'assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
-    <script src="{% static 'assets/static/js/pages/dashboard.js' %}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var options = {
+                chart: {
+                    type: 'line'
+                },
+                series: [{
+                    name: 'Pendapatan',
+                    data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan }}, {% endfor %} ]
+                }, {
+                    name: 'Modal',
+                    data: [ {% for forecast in forecast_data %} {{ forecast.modal }}, {% endfor %} ]
+                }],
+                xaxis: {
+                    categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
+                }
+            }
+
+            var chart = new ApexCharts(document.querySelector("#lineChart"), options);
+
+            chart.render();
+        });
+    </script>
 </body>
 </html>
