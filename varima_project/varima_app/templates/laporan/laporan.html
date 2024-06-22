@@ -245,7 +245,7 @@
                                                         <div class="card-body">
                                                             <header>Identifikasi Model VARIMA</header>
                                                             <table class="table">
-                                                                <tr><th>Best Order</th><td>(1,1,0)</td></tr>
+                                                                <tr><th>Best Order</th><td>(1,0,0)</td></tr>
                                                                 <tr><th>AIC</th><td>{{ varima_aic }}</td></tr>
                                                                 <tr><th>BIC</th><td>{{ varima_bic }}</td></tr>
                                                             </table> 
@@ -306,13 +306,39 @@
                                                             {% for series, diag in diagnostics.items %}
                                                                 <h5>{{ series }}</h5>
                                                                 <table class="table">
-                                                                    <tr><th>Ljung-Box Test Statistic</th><td>{{ diag.ljung_box_stat }}</td></tr>
-                                                                    <tr><th>Ljung-Box p-value</th><td>{{ diag.ljung_box_p_value }}</td></tr>
                                                                     <tr><th>Jarque-Bera Test Statistic</th><td>{{ diag.jarque_bera_stat }}</td></tr>
                                                                     <tr><th>Jarque-Bera p-value</th><td>{{ diag.jarque_bera_p_value }}</td></tr>
                                                                     <tr><th>Durbin-Watson Statistic</th><td>{{ diag.durbin_watson_stat }}</td></tr>
                                                                 </table> 
                                                             {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>                      
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="accordion" id="accordionExample">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingOne">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+                                                    Evaluasi Model
+                                                </button>
+                                            </h2>
+                                            <div id="collapseFive" class="accordion-collapse collapse show" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
+                                                <div class="accordion-body">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <header>Evaluasi Model</header>
+                                                            <table class="table">
+                                                                <tr><th>Mean Absolute Error (MAE)</th><td>{{ model_evaluation.mae }}</td></tr>
+                                                                <tr><th>Mean Squared Error (MSE)</th><td>{{ model_evaluation.mse }}</td></tr>
+                                                                <tr><th>R-squared (R²)</th><td>{{ model_evaluation.r2 }}</td></tr>
+                                                            </table> 
                                                         </div>
                                                     </div>
                                                 </div>

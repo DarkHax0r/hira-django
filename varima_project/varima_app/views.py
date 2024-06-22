@@ -15,6 +15,7 @@ from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch, normal_ad
 from statsmodels.stats.stattools import durbin_watson
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
 
@@ -133,7 +134,7 @@ def diagnostic_model(varima_results):
 
 @login_required
 def dashboard(request):
-    month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)]
+    month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(7, 13)]
     year_choices = list(range(2023, 2031))
 
     if request.method == "POST":
@@ -189,6 +190,16 @@ def laporan(request):
         # Hasil diagnostik model
         diagnostics = diagnostic_model(varima_results)
 
+        # Evaluasi Model
+        # Prediksi data dengan model yang sudah dilatih
+        df['prediction'] = varima_results.fittedvalues.sum(axis=1)
+        # Drop NaN values for accurate evaluation
+        df_eval = df.dropna()
+
+        mae = mean_absolute_error(df_eval['pendapatan'], df_eval['prediction'])
+        mse = mean_squared_error(df_eval['pendapatan'], df_eval['prediction'])
+        r2 = r2_score(df_eval['pendapatan'], df_eval['prediction'])
+
         context = {
             "parfum": data,
             "adf_pendapatan": adf_pendapatan,
@@ -197,6 +208,11 @@ def laporan(request):
             "varima_bic": varima_bic,
             "varima_params": varima_params.to_dict(),
             "diagnostics": diagnostics,
+            "model_evaluation": {
+                "mae": mae,
+                "mse": mse,
+                "r2": r2,
+            },
         }
 
     except KeyError as e:
@@ -208,8 +224,6 @@ def laporan(request):
         context = {}
 
     return render(request, "laporan/laporan.html", context)
-
-
 
 def login_view(request):
     if request.method == "POST":
@@ -238,11 +252,11 @@ def analyze_data(df, steps):
 
     # Fit the VARMAX model
     try:
-        model = VARMAX(df_diff, order=(1, 0), trend="c", error_cov_type="diagonal")
+        model = VARMAX(df_diff, order=(0, 1), trend="c", error_cov_type="diagonal")
         model_fitted = model.fit(disp=False)
     except np.linalg.LinAlgError:
         # In case of a non-positive definite matrix, add regularization
-        model = VARMAX(df_diff, order=(1, 0), trend="c", error_cov_type="diagonal")
+        model = VARMAX(df_diff, order=(0, 1), trend="c", error_cov_type="diagonal")
         model_fitted = model.fit(disp=False)
 
     # Forecast
