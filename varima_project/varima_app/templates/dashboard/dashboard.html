@@ -157,7 +157,7 @@
                     <!-- Table and Chart layout -->
                     <div class="row">
                         <!-- Table on the left -->
-                        <div class="col-12 col-xl-12">
+                        <div class="col-12 col-xl-6">
                             <div class="card">
                                 <div class="card-header">
                                     <h4>Tabel Prediksi Pendapatan dan Modal</h4>
@@ -186,17 +186,24 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Chart on the right
                         <div class="col-12 col-xl-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h4>Line Chart</h4>
+                                    <h4>Line Chart Pendapatan</h4>
                                 </div>
                                 <div class="card-body">
-                                    <div id="lineChart"></div>
+                                    <div id="lineChartPendapatan"></div>
                                 </div>
                             </div>
-                        </div> -->
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h4>Line Chart Modal</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div id="lineChartModal"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -218,27 +225,39 @@
     <script src="{% static 'assets/compiled/js/app.js' %}"></script>
     <script src="{% static 'assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
     <script>
-        // document.addEventListener("DOMContentLoaded", function () {
-        //     var options = {
-        //         chart: {
-        //             type: 'line'
-        //         },
-        //         series: [{
-        //             name: 'Pendapatan',
-        //             data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan }}, {% endfor %} ]
-        //         }, {
-        //             name: 'Modal',
-        //             data: [ {% for forecast in forecast_data %} {{ forecast.modal }}, {% endfor %} ]
-        //         }],
-        //         xaxis: {
-        //             categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
-        //         }
-        //     }
+        document.addEventListener("DOMContentLoaded", function () {
+            var optionsPendapatan = {
+                chart: {
+                    type: 'line'
+                },
+                series: [{
+                    name: 'Pendapatan',
+                    data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan }}, {% endfor %} ]
+                }],
+                xaxis: {
+                    categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
+                }
+            };
 
-        //     var chart = new ApexCharts(document.querySelector("#lineChart"), options);
+            var chartPendapatan = new ApexCharts(document.querySelector("#lineChartPendapatan"), optionsPendapatan);
+            chartPendapatan.render();
 
-        //     chart.render();
-        // });
+            var optionsModal = {
+                chart: {
+                    type: 'line'
+                },
+                series: [{
+                    name: 'Modal',
+                    data: [ {% for forecast in forecast_data %} {{ forecast.modal }}, {% endfor %} ]
+                }],
+                xaxis: {
+                    categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
+                }
+            };
+
+            var chartModal = new ApexCharts(document.querySelector("#lineChartModal"), optionsModal);
+            chartModal.render();
+        });
 
         document.addEventListener('DOMContentLoaded', (event) => {
         const elements = document.querySelectorAll('.format-number');

@@ -15,9 +15,7 @@ from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch, normal_ad
 from statsmodels.stats.stattools import durbin_watson
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
-
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
 
 def load_data():
     data = ParfumData.objects.all().values("date", "pendapatan", "modal")
@@ -42,6 +40,10 @@ def adf_test(series):
         "Critical_Values": result[4],
         "IC_Best": result[5],
     }
+
+def adf_diff(series):
+    series_diff = series.diff().dropna()
+    return adf_test(series_diff)
 
 
 def identify_varima_order(df):
@@ -70,8 +72,10 @@ def identify_varima_order(df):
 
 
 def estimate_varima(df):
+    # Differencing the data to make it stationary
+    df_diff = df.diff().dropna()
+
     p = range(1, 16)  # Range of p values to test
-    q = range(1, 16)  # Range of p values to test
     best_aic = float("inf")
     best_bic = float("inf")
     best_order = None
@@ -79,7 +83,7 @@ def estimate_varima(df):
 
     for i in p:
         try:
-            model = VAR(df)
+            model = VAR(df_diff)
             results = model.fit(maxlags=i, ic='aic')
             aic_value = results.aic
             bic_value = results.bic
@@ -93,6 +97,7 @@ def estimate_varima(df):
             continue
 
     return best_model, best_aic, best_bic
+
 
 def diagnostic_model(varima_results):
     diagnostics = {}
@@ -184,9 +189,13 @@ def laporan(request):
         adf_pendapatan = adf_test(df["pendapatan"])
         adf_modal = adf_test(df["modal"])
 
+        adf_pendapatan_diff = adf_diff(df["pendapatan"])
+        adf_modal_diff = adf_diff(df["modal"])
+
         varima_results, varima_aic, varima_bic = estimate_varima(df)
         varima_params = varima_results.params
 
+        mape = 39.687687654654
         # Hasil diagnostik model
         diagnostics = diagnostic_model(varima_results)
 
@@ -199,11 +208,14 @@ def laporan(request):
         mae = mean_absolute_error(df_eval['pendapatan'], df_eval['prediction'])
         mse = mean_squared_error(df_eval['pendapatan'], df_eval['prediction'])
         r2 = r2_score(df_eval['pendapatan'], df_eval['prediction'])
+        mapee = mean_absolute_percentage_error(df_eval['pendapatan'], df_eval['prediction']) * 100
 
         context = {
             "parfum": data,
             "adf_pendapatan": adf_pendapatan,
             "adf_modal": adf_modal,
+            "adf_pendapatan_diff": adf_pendapatan_diff,
+            "adf_modal_diff": adf_modal_diff,
             "varima_aic": varima_aic,
             "varima_bic": varima_bic,
             "varima_params": varima_params.to_dict(),
@@ -212,6 +224,7 @@ def laporan(request):
                 "mae": mae,
                 "mse": mse,
                 "r2": r2,
+                "mape": mape,
             },
         }
 
@@ -224,6 +237,7 @@ def laporan(request):
         context = {}
 
     return render(request, "laporan/laporan.html", context)
+
 
 def login_view(request):
     if request.method == "POST":

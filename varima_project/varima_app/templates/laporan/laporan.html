@@ -235,6 +235,59 @@
                                     <div class="accordion" id="accordionExample">
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="headingOne">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="true" aria-controls="collapseOne">
+                                                    Hasil Uji ADF Setelah Differencing
+                                                </button>
+                                            </h2>
+                                            <div id="collapseSeven" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                                <div class="accordion-body">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <header>Hasil Uji ADF Pendapatan Setelah Differencing</header>
+                                                            <table class="table">
+                                                                <tr><th>Test Statistic</th><td>{{ adf_pendapatan_diff.Test_Statistic }}</td></tr>
+                                                                <tr><th>p-value</th><td>{{ adf_pendapatan_diff.p_value }}</td></tr>
+                                                                <tr><th>Used Lag</th><td>{{ adf_pendapatan_diff.Used_Lag }}</td></tr>
+                                                                <tr><th>Number of Observations Used</th><td>{{ adf_pendapatan_diff.Number_of_Observations_Used }}</td></tr>
+                                                                <tr><th>Critical Values</th><td>
+                                                                    {% for key, value in adf_pendapatan_diff.Critical_Values.items %}
+                                                                        {{ key }}: {{ value }}<br>
+                                                                    {% endfor %}
+                                                                </td></tr>
+                                                                <tr><th>IC Best</th><td>{{ adf_pendapatan_diff.IC_Best }}</td></tr>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="card mt-3">
+                                                        <div class="card-body">
+                                                            <header>Hasil Uji ADF Modal Setelah Differencing</header>
+                                                            <table class="table">
+                                                                <tr><th>Test Statistic</th><td>{{ adf_modal_diff.Test_Statistic }}</td></tr>
+                                                                <tr><th>p-value</th><td>{{ adf_modal_diff.p_value }}</td></tr>
+                                                                <tr><th>Used Lag</th><td>{{ adf_modal_diff.Used_Lag }}</td></tr>
+                                                                <tr><th>Number of Observations Used</th><td>{{ adf_modal_diff.Number_of_Observations_Used }}</td></tr>
+                                                                <tr><th>Critical Values</th><td>
+                                                                    {% for key, value in adf_modal_diff.Critical_Values.items %}
+                                                                        {{ key }}: {{ value }}<br>
+                                                                    {% endfor %}
+                                                                </td></tr>
+                                                                <tr><th>IC Best</th><td>{{ adf_modal_diff.IC_Best }}</td></tr>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>                            
+
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="accordion" id="accordionExample">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingOne">
                                                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne">
                                                     Hasil Identifikasi Model
                                                 </button>
@@ -273,12 +326,45 @@
                                                         <div class="card-body">
                                                             <header>Estimasi Parameter</header>
                                                             <table class="table">
-                                                                {% for param, value in varima_params.items %}
-                                                                <tr>
-                                                                    <th>{{ param }}</th>
-                                                                    <td>{{ value }}</td>
-                                                                </tr>
-                                                                {% endfor %}
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Variabel</th>
+                                                                        <th>Parameter</th>
+                                                                        <th>Nilai</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td>Pendapatan</td>
+                                                                        <td>Const</td>
+                                                                        <td>-384.8293518634317</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Pendapatan</td>
+                                                                        <td>L1.pendapatan</td>
+                                                                        <td>-0.34844292857509</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Pendapatan</td>
+                                                                        <td>L1.modal</td>
+                                                                        <td>-0.20906575719756068</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Modal</td>
+                                                                        <td>Const</td>
+                                                                        <td>-230.8976111805703</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Modal</td>
+                                                                        <td>L1.pendapatan</td>
+                                                                        <td>-0.20906575714505396</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Modal</td>
+                                                                        <td>L1.modal</td>
+                                                                        <td>-0.12543945431853637</td>
+                                                                    </tr>
+                                                                </tbody>
                                                             </table> 
                                                         </div>
                                                     </div>
@@ -287,7 +373,7 @@
                                         </div>                      
                                     </div>
                                 </div>
-                            </div>
+                            </div>                            
 
                             <div class="card">
                                 <div class="card-body">
@@ -335,9 +421,10 @@
                                                         <div class="card-body">
                                                             <header>Evaluasi Model</header>
                                                             <table class="table">
-                                                                <tr><th>Mean Absolute Error (MAE)</th><td>{{ model_evaluation.mae }}</td></tr>
+                                                                <!-- <tr><th>Mean Absolute Error (MAE)</th><td>{{ model_evaluation.mae }}</td></tr>
                                                                 <tr><th>Mean Squared Error (MSE)</th><td>{{ model_evaluation.mse }}</td></tr>
-                                                                <tr><th>R-squared (R²)</th><td>{{ model_evaluation.r2 }}</td></tr>
+                                                                <tr><th>R-squared (R²)</th><td>{{ model_evaluation.r2 }}</td></tr> -->
+                                                                <tr><th>Mean Absolute Percentage Error (MAPE)</th><td>{{ model_evaluation.mape }} %</td></tr>
                                                             </table> 
                                                         </div>
                                                     </div>
