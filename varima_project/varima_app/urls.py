@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path("", views.login_view, name="login"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path('dashboard_nama/', views.dashboard_nama, name='dashboard_nama'),
     path("laporan/", views.laporan, name="laporan"),
     path("laporan/add/", views.laporan_add, name="laporan_add"),
     path("laporan/import/", views.laporan_import, name="laporan_import"),

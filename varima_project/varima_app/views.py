@@ -138,6 +138,11 @@ def diagnostic_model(varima_results):
     return diagnostics
 
 @login_required
+def dashboard_nama(request):
+    # Your dashboard_nama logic
+    return render(request, 'dashboard/dashboard_nama.html')
+
+@login_required
 def dashboard(request):
     month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(7, 13)]
     year_choices = list(range(2023, 2031))

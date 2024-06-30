@@ -14,6 +14,51 @@
         rel="stylesheet"
         href="{% static 'assets/compiled/css/iconly.css' %}"
     />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 5000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 50px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: px;
+        }
+        .header img {
+            width: 150px;
+            height: auto;
+            margin-bottom: 20px; /* Add margin to create space */
+        }
+        .title {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .supervisors {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .supervisor {
+            text-align: center;
+        }
+        .supervisor p {
+            margin: 5px 0;
+        }
+        .footer {
+            text-align: center;
+            
+        }
+    </style>
+    
 </head>
 <body>
     <script src="{% static 'assets/static/js/initTheme.js' %}"></script>
@@ -22,14 +67,7 @@
             <div class="sidebar-wrapper active">
                 <div class="sidebar-header position-relative">
                     <div class="d-flex justify-content-between align-items-center">
-                        <!-- <div class="logo">
-                            <a href="">
-                                <img
-                                    src="{% static 'assets/compiled/svg/logo.svg' %}"
-                                    alt="Logo"
-                                />
-                            </a>
-                        </div> -->
+
                         <div class="theme-toggle d-flex gap-2 align-items-center mt-2">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +113,7 @@
                 <div class="sidebar-menu">
                     <ul class="menu">
                         <li class="sidebar-title">Menu</li>
-                        <li class="sidebar-item">
+                        <li class="sidebar-item active">
                             <a href="{% url 'dashboard_nama' %}" class="sidebar-link">
                                 <i class="bi bi-envelope-fill"></i>
                                 <span>Dashboard</span>
@@ -87,7 +125,7 @@
                                 <span>Laporan Harian</span>
                             </a>
                         </li>
-                        <li class="sidebar-item active">
+                        <li class="sidebar-item ">
                             <a href="{% url 'dashboard' %}" class="sidebar-link">
                                 <i class="bi bi-bar-chart-line"></i>
                                 <span>Prediksi</span>
@@ -113,107 +151,35 @@
             </div>
         </div>
         <div id="main">
-            <header class="mb-3">
-                <a href="#" class="burger-btn d-block d-xl-none">
-                    <i class="bi bi-justify fs-3"></i>
-                </a>
-            </header>
-            <div class="page-heading">
-                {% block page_content %}
-                <div class="page-title">
-                    <div class="row">
-                        <div class="col-12 col-md-6 order-md-1 order-last">
-                            <h3>Prediksi</h3>
-                        </div>
-                        <div class="col-12 col-md-6 order-md-2 order-first">
-                            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="#">Prediksi</a></li>
-                                </ol>
-                            </nav>
-                        </div>
+            <div class="container"  style="height: 100vh;">
+                <div class="header">
+                    <img src="{% static 'gambar/unjani.png' %}" alt="Logo">
+                    <br>
+                </div>
+                <div class="title">
+                    PREDIKSI PENDAPATAN PADA MITRA TOKO PARFUME <em>TRENDS</em> MENGGUNAKAN METODE <em>VECTOR AUTOREGRESSIVE INTEGRETED MOVING AVERAGE</em> (VARIMA)
+                </div>
+                <div class="supervisors">
+                    <div class="supervisor">
+                        <p>PEMBIMBING 1</p>
+                        <p>Wina Witanti, S.T.,M.T.</p>
+                        <p>NID. 412176273
+                        </p>
+                    </div>
+                    <div class="supervisor">
+                        <p>PEMBIMBING 2</p>
+                        <p>Fatan Kasyidi, S.kom.,S.T.
+                        </p>
+                        <p>NID. 412100992</p>
                     </div>
                 </div>
-
-                <section class="section">
-                    <!-- Dropdown at the top -->
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="col-12">
-                                <form method="post" action="{% url 'dashboard' %}">
-                                    {% csrf_token %}
-                                    <div class="col-md-12">
-                                        <label for="month">Pilih Bulan yang Akan Diprediksi</label>
-                                    </div>
-                                    <div class="col-md-12 form-group">
-                                        <select id="month" class="form-control" name="month">
-                                            {% for month_num, month_name in month_choices %}
-                                                <option value="{{ month_num }}">{{ month_name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-sm-12 d-flex justify-content-end">
-                                        <button type="submit" class="btn btn-primary me-1 mb-1">Masukkan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Table and Chart layout -->
-                    <div class="row">
-                        <!-- Table on the left -->
-                        <div class="col-12 col-xl-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h4>Tabel Prediksi Pendapatan dan Modal</h4>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">No</th>
-                                                <th scope="col">Tanggal</th>
-                                                <th scope="col">Pendapatan</th>
-                                                <th scope="col">Modal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for forecast in forecast_data %}
-                                            <tr>
-                                                <th scope="row">{{ forloop.counter }}</th>
-                                                <td>{{ forecast.date|date:"M d, Y" }}</td>
-                                                <td>Rp. <span class="format-number">{{ forecast.pendapatan|floatformat:0 }}</span></td>
-                                                <td>Rp. <span class="format-number">{{ forecast.modal|floatformat:0 }}</span></td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>                                                                                                       
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-xl-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h4>Line Chart Pendapatan</h4>
-                                </div>
-                                <div class="card-body">
-                                    <div id="lineChartPendapatan"></div>
-                                </div>
-                            </div>
-                            <div class="card mt-4">
-                                <div class="card-header">
-                                    <h4>Line Chart Modal</h4>
-                                </div>
-                                <div class="card-body">
-                                    <div id="lineChartModal"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {% endblock %}
+                <div class="footer">
+                    <p>Oleh :</p>
+                    <p>Hira Nur Afifah</p>
+                    <p>NIM: 3411201036
+                    </p>
+                </div>
+            </div>
             </div>
             <footer>
                 <div class="footer clearfix mb-0 text-muted">
