@@ -146,6 +146,7 @@ def dashboard_nama(request):
 def dashboard(request):
     month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(7, 13)]
     year_choices = list(range(2023, 2031))
+    penambahan = np.array([3000, -1000, 2000, 2000, -3000, 2000, -1000, 1500, 1000, 2500, 1500, -2000, 1200, 1000, 3000, 1500, -1000, -2000, 150, 300, 200, 1500, -200, -500, 2500])
 
     if request.method == "POST":
         month = int(request.POST.get("month"))
@@ -164,6 +165,14 @@ def dashboard(request):
 
         forecast_data = forecast_data.reset_index()
         forecast_data.columns = ["date", "pendapatan", "modal"]
+
+        # Repeat the penambahan array to match the length of forecast data
+        repeat_count = (len(forecast_data) + len(penambahan) - 1) // len(penambahan)
+        extended_penambahan = np.tile(penambahan, repeat_count)[:len(forecast_data)]
+
+        # Add the extended_penambahan array to forecast pendapatan and modal
+        forecast_data["pendapatan"] += extended_penambahan
+        forecast_data["modal"] += extended_penambahan
 
         forecast_data["date"] = pd.to_datetime(forecast_data["date"])
         forecast_data_filtered = forecast_data[
@@ -185,6 +194,7 @@ def dashboard(request):
         "year_choices": year_choices,
     }
     return render(request, "dashboard/dashboard.html", context)
+
 
 @login_required
 def laporan(request):

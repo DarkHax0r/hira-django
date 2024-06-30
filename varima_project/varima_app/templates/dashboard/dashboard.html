@@ -169,7 +169,7 @@
                                     <h4>Tabel Prediksi Pendapatan dan Modal</h4>
                                 </div>
                                 <div class="card-body">
-                                    <table class="table">
+                                    <table class="table table-striped" id="table1">
                                         <thead>
                                             <tr>
                                                 <th scope="col">No</th>
@@ -229,7 +229,16 @@
     <script src="{% static 'assets/static/js/components/dark.js' %}"></script>
     <script src="{% static 'assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
     <script src="{% static 'assets/compiled/js/app.js' %}"></script>
+
     <script src="{% static 'assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+                <script>
+                    $(document).ready(function() {
+                        $('#table1').DataTable();
+                    });
+                </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             var optionsPendapatan = {
