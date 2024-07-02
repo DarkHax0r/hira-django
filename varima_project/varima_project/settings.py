@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'varima_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'db_hana',
+        'NAME': 'db_hira',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
