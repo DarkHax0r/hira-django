@@ -72,12 +72,9 @@ def identify_varima_order(df):
 
 
 def estimate_varima(df):
-    # Differencing the data to make it stationary
     df_diff = df.diff().dropna()
-
-    p = range(1, 16)  # Range of p values to test
+    p = range(1, 16)
     best_aic = float("inf")
-    best_bic = float("inf")
     best_order = None
     best_model = None
 
@@ -86,17 +83,16 @@ def estimate_varima(df):
             model = VAR(df_diff)
             results = model.fit(maxlags=i, ic='aic')
             aic_value = results.aic
-            bic_value = results.bic
 
             if aic_value < best_aic:
                 best_aic = aic_value
-                best_bic = bic_value
                 best_order = i
                 best_model = results
         except:
             continue
 
-    return best_model, best_aic, best_bic
+    return best_model, best_aic, None
+
 
 
 def diagnostic_model(varima_results):
@@ -208,22 +204,25 @@ def laporan(request):
         adf_modal_diff = adf_diff(df["modal"])
 
         varima_results, varima_aic, varima_bic = estimate_varima(df)
-        varima_params = varima_results.params
+
+        if varima_results is not None:
+            varima_params = varima_results.params
+        else:
+            varima_params = None
 
         mape = 39.687687654654
-        # Hasil diagnostik model
-        diagnostics = diagnostic_model(varima_results)
+        diagnostics = diagnostic_model(varima_results) if varima_results is not None else {}
 
-        # Evaluasi Model
-        # Prediksi data dengan model yang sudah dilatih
-        df['prediction'] = varima_results.fittedvalues.sum(axis=1)
-        # Drop NaN values for accurate evaluation
-        df_eval = df.dropna()
+        if varima_results is not None:
+            df['prediction'] = varima_results.fittedvalues.sum(axis=1)
+            df_eval = df.dropna()
 
-        mae = mean_absolute_error(df_eval['pendapatan'], df_eval['prediction'])
-        mse = mean_squared_error(df_eval['pendapatan'], df_eval['prediction'])
-        r2 = r2_score(df_eval['pendapatan'], df_eval['prediction'])
-        mapee = mean_absolute_percentage_error(df_eval['pendapatan'], df_eval['prediction']) * 100
+            mae = mean_absolute_error(df_eval['pendapatan'], df_eval['prediction'])
+            mse = mean_squared_error(df_eval['pendapatan'], df_eval['prediction'])
+            r2 = r2_score(df_eval['pendapatan'], df_eval['prediction'])
+            mapee = mean_absolute_percentage_error(df_eval['pendapatan'], df_eval['prediction']) * 100
+        else:
+            mae = mse = r2 = mapee = None
 
         context = {
             "parfum": data,
@@ -233,7 +232,7 @@ def laporan(request):
             "adf_modal_diff": adf_modal_diff,
             "varima_aic": varima_aic,
             "varima_bic": varima_bic,
-            "varima_params": varima_params.to_dict(),
+            "varima_params": varima_params.to_dict() if varima_params is not None else {},
             "diagnostics": diagnostics,
             "model_evaluation": {
                 "mae": mae,
@@ -252,7 +251,6 @@ def laporan(request):
         context = {}
 
     return render(request, "laporan/laporan.html", context)
-
 
 def login_view(request):
     if request.method == "POST":
