@@ -243,11 +243,11 @@ def laporan(request):
         }
 
     except KeyError as e:
-        messages.error(request, f"Kolom yang diperlukan tidak ditemukan: {e}")
+        messages.error(request, f"")
         context = {}
 
     except ValueError as e:
-        messages.error(request, f"Kesalahan dalam pengambilan data: {e}")
+        messages.error(request, f"")
         context = {}
 
     return render(request, "laporan/laporan.html", context)
