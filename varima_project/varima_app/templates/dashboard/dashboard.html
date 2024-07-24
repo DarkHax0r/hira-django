@@ -233,6 +233,16 @@
                   </div>
                 </div>
               </div>
+              <div class="col-8 col-xl-6">
+                <div class="card">
+                  <div class="card-header">
+                    <h4>Line Chart Data bulan Juni - Januari</h4>
+                  </div>
+                  <div class="card-body">
+                    <div id="lineChartAllData"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -265,49 +275,71 @@
       });
     </script>
     <script>
-          document.addEventListener("DOMContentLoaded", function () {
-              var optionsPendapatan = {
-                  chart: {
-                      type: 'line'
-                  },
-                  series: [{
-                      name: 'Pendapatan',
-                      data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan }}, {% endfor %} ]
-                  }],
-                  xaxis: {
-                      categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
-                  }
-              };
-
-              var chartPendapatan = new ApexCharts(document.querySelector("#lineChartPendapatan"), optionsPendapatan);
-              chartPendapatan.render();
-
-              var optionsModal = {
-                  chart: {
-                      type: 'line'
-                  },
-                  series: [{
-                      name: 'Modal',
-                      data: [ {% for forecast in forecast_data %} {{ forecast.modal }}, {% endfor %} ]
-                  }],
-                  xaxis: {
-                      categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
-                  }
-              };
-
-              var chartModal = new ApexCharts(document.querySelector("#lineChartModal"), optionsModal);
-              chartModal.render();
-          });
-
-          document.addEventListener('DOMContentLoaded', (event) => {
-          const elements = document.querySelectorAll('.format-number');
-          elements.forEach((element) => {
-              const number = parseInt(element.textContent, 10);
-              if (!isNaN(number)) {
-                  element.textContent = number.toLocaleString('id-ID');
+        document.addEventListener("DOMContentLoaded", function () {
+          // Grafik Pendapatan
+          var optionsPendapatan = {
+              chart: {
+                  type: 'line'
+              },
+              series: [{
+                  name: 'Pendapatan',
+                  data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan|floatformat:0 }}, {% endfor %} ]
+              }],
+              xaxis: {
+                  categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
               }
-          });
+          };
+
+          var chartPendapatan = new ApexCharts(document.querySelector("#lineChartPendapatan"), optionsPendapatan);
+          chartPendapatan.render();
+
+          // Grafik Modal
+          var optionsModal = {
+              chart: {
+                  type: 'line'
+              },
+              series: [{
+                  name: 'Modal',
+                  data: [ {% for forecast in forecast_data %} {{ forecast.modal|floatformat:0 }}, {% endfor %} ]
+              }],
+              xaxis: {
+                  categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
+              }
+          };
+
+          var chartModal = new ApexCharts(document.querySelector("#lineChartModal"), optionsModal);
+          chartModal.render();
+
+          // Grafik Data Juli - Desember
+          var optionsAllData = {
+              chart: {
+                  type: 'line'
+              },
+              series: [{
+                  name: 'Pendapatan',
+                  data: [ {% for data in chart_data %} {{ data.pendapatan|floatformat:0 }}, {% endfor %} ]
+              }, {
+                  name: 'Modal',
+                  data: [ {% for data in chart_data %} {{ data.modal|floatformat:0 }}, {% endfor %} ]
+              }],
+              xaxis: {
+                  categories: [ {% for data in chart_data %} "{{ data.date|date:"M d, Y" }}", {% endfor %} ]
+              }
+          };
+
+          var chartAllData = new ApexCharts(document.querySelector("#lineChartAllData"), optionsAllData);
+          chartAllData.render();
       });
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const elements = document.querySelectorAll('.format-number');
+            elements.forEach((element) => {
+                const number = parseInt(element.textContent, 10);
+                if (!isNaN(number)) {
+                    element.textContent = number.toLocaleString('id-ID');
+                }
+            });
+        });
     </script>
   </body>
 </html>
