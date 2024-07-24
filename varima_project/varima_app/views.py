@@ -177,10 +177,17 @@ def dashboard(request):
         ]
         forecast_data_dict = forecast_data_filtered.to_dict("records")
 
+        # Ambil data asli dari Januari 2024 hingga Juni 2024
+        real_data = df[(df.index.year == 2024) & (df.index.month >= 1) & (df.index.month <= 6)]
+        real_data_jan_to_jun_2024 = real_data.reset_index()
+        real_data_jan_to_jun_2024.columns = ["date", "pendapatan", "modal"]
+        real_data_jan_to_jun_2024_dict = real_data_jan_to_jun_2024.to_dict("records")
+
         context = {
             "forecast_data": forecast_data_dict,
             "month_choices": month_choices,
             "year_choices": year_choices,
+            "real_data_jan_to_jun_2024": real_data_jan_to_jun_2024_dict,
         }
         return render(request, "dashboard/dashboard.html", context)
 
@@ -188,8 +195,10 @@ def dashboard(request):
         "forecast_data": [],
         "month_choices": month_choices,
         "year_choices": year_choices,
+        "real_data_jan_to_jun_2024": [],
     }
     return render(request, "dashboard/dashboard.html", context)
+
 
 
 @login_required

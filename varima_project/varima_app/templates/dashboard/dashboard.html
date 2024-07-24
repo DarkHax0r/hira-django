@@ -275,7 +275,7 @@
       });
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+      document.addEventListener("DOMContentLoaded", function () {
           // Grafik Pendapatan
           var optionsPendapatan = {
               chart: {
@@ -310,36 +310,26 @@
           var chartModal = new ApexCharts(document.querySelector("#lineChartModal"), optionsModal);
           chartModal.render();
 
-          // Grafik Data Juli - Desember
+          // Grafik Data Januari - Juni 2024
           var optionsAllData = {
               chart: {
                   type: 'line'
               },
               series: [{
                   name: 'Pendapatan',
-                  data: [ {% for data in chart_data %} {{ data.pendapatan|floatformat:0 }}, {% endfor %} ]
+                  data: [ {% for data in real_data_jan_to_jun_2024 %} {{ data.pendapatan|floatformat:0 }}, {% endfor %} ]
               }, {
                   name: 'Modal',
-                  data: [ {% for data in chart_data %} {{ data.modal|floatformat:0 }}, {% endfor %} ]
+                  data: [ {% for data in real_data_jan_to_jun_2024 %} {{ data.modal|floatformat:0 }}, {% endfor %} ]
               }],
               xaxis: {
-                  categories: [ {% for data in chart_data %} "{{ data.date|date:"M d, Y" }}", {% endfor %} ]
+                  categories: [ {% for data in real_data_jan_to_jun_2024 %} "{{ data.date|date:"M d, Y" }}", {% endfor %} ]
               }
           };
 
           var chartAllData = new ApexCharts(document.querySelector("#lineChartAllData"), optionsAllData);
           chartAllData.render();
       });
-
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const elements = document.querySelectorAll('.format-number');
-            elements.forEach((element) => {
-                const number = parseInt(element.textContent, 10);
-                if (!isNaN(number)) {
-                    element.textContent = number.toLocaleString('id-ID');
-                }
-            });
-        });
     </script>
   </body>
 </html>
