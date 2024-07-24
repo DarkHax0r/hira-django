@@ -236,7 +236,7 @@
               <div class="col-8 col-xl-6">
                 <div class="card">
                   <div class="card-header">
-                    <h4>Line Chart Data bulan Juni - Januari</h4>
+                    <h4>Line Chart</h4>
                   </div>
                   <div class="card-body">
                     <div id="lineChartAllData"></div>
@@ -289,10 +289,10 @@
                   categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
               }
           };
-
+      
           var chartPendapatan = new ApexCharts(document.querySelector("#lineChartPendapatan"), optionsPendapatan);
           chartPendapatan.render();
-
+      
           // Grafik Modal
           var optionsModal = {
               chart: {
@@ -306,10 +306,10 @@
                   categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
               }
           };
-
+      
           var chartModal = new ApexCharts(document.querySelector("#lineChartModal"), optionsModal);
           chartModal.render();
-
+      
           // Grafik Data Januari - Juni 2024
           var optionsAllData = {
               chart: {
@@ -323,13 +323,19 @@
                   data: [ {% for data in real_data_jan_to_jun_2024 %} {{ data.modal|floatformat:0 }}, {% endfor %} ]
               }],
               xaxis: {
-                  categories: [ {% for data in real_data_jan_to_jun_2024 %} "{{ data.date|date:"M d, Y" }}", {% endfor %} ]
+                  categories: [ {% for data in real_data_jan_to_jun_2024 %} "{{ data.date|date:"M d, Y" }}", {% endfor %} ],
+                  labels: {
+                      show: false 
+                  }
+              },
+              legend: {
+                  show: false
               }
           };
-
+      
           var chartAllData = new ApexCharts(document.querySelector("#lineChartAllData"), optionsAllData);
           chartAllData.render();
       });
-    </script>
+      </script>
   </body>
 </html>
