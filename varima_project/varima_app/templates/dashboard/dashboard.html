@@ -147,8 +147,7 @@
                     {% csrf_token %}
                     <div class="col-md-12">
                       <label for="month"
-                        >Pilih Bulan yang Akan Diprediksi</label
-                      >
+                        >Pilih bulan dan tahun yang Akan Diprediksi</label>
                     </div>
                     <div class="col-md-12 form-group">
                       <select id="month" class="form-control" name="month">
@@ -158,6 +157,16 @@
                         </option>
                         {% endfor %}
                       </select>
+                    </div>
+                    <div class="col-md-12">
+                      <label for="year">Tahun</label>
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <select id="year" class="form-control" name="year">
+                            {% for year in year_choices %}
+                                <option value="{{ year }}">{{ year }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="col-sm-12 d-flex justify-content-end">
                       <button type="submit" class="btn btn-primary me-1 mb-1">
@@ -179,73 +188,68 @@
                       <h4>Tabel Prediksi Pendapatan dan Modal</h4>
                     </div>
                     <div class="card-body">
+                      <div>
+                        <h4>MAPE Pendapatan: {{ mape_pendapatan|floatformat:2 }}%</h4>
+                        <h4>MAPE Modal: {{ mape_modal|floatformat:2 }}%</h4>
+                    </div>
                       <table class="table table-striped" id="table1">
                         <thead>
-                          <tr>
-                            <th scope="col">No</th>
-                            <th scope="col">Tanggal</th>
-                            <th scope="col">Pendapatan</th>
-                            <th scope="col">Modal</th>
-                          </tr>
+                            <tr>
+                                <th scope="col">No</th>
+                                <th scope="col">Tanggal</th>
+                                <th scope="col">Pendapatan</th>
+                                <th scope="col">Modal</th>
+                                <th scope="col">Pendapatan Aktual</th>
+                                <th scope="col">Modal Aktual</th>
+                            </tr>
                         </thead>
                         <tbody>
-                          {% for forecast in forecast_data %}
-                          <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
-                            <td>{{ forecast.date|date:"M d, Y" }}</td>
-                            <td>
-                              Rp.
-                              <span class="format-number"
-                                >{{ forecast.pendapatan|floatformat:0 }}</span
-                              >
-                            </td>
-                            <td>
-                              Rp.
-                              <span class="format-number"
-                                >{{ forecast.modal|floatformat:0 }}</span
-                              >
-                            </td>
-                          </tr>
-                          {% endfor %}
+                            {% for forecast in forecast_data %}
+                            <tr>
+                                <th scope="row">{{ forloop.counter }}</th>
+                                <td>{{ forecast.date|date:"M d, Y" }}</td>
+                                <td>
+                                    Rp.
+                                    <span class="format-number">{{ forecast.pendapatan|floatformat:0 }}</span>
+                                </td>
+                                <td>
+                                    Rp.
+                                    <span class="format-number">{{ forecast.modal|floatformat:0 }}</span>
+                                </td>
+                                <td>Rp. <span class="format-number">{{ forecast.pendapatan_aktual|floatformat:0 }}</span></td>
+                                <td>Rp. <span class="format-number">{{ forecast.modal_aktual|floatformat:0 }}</span></td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
-                      </table>
+                    </table>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="col-8 col-xl-6">
+              <!-- Chart Pendapatan -->
+              <div class="col-12 col-xl-6">
                 <div class="card">
                   <div class="card-header">
-                    <h4>Line Chart Pendapatan</h4>
+                    <h4>Hasil Pendapatan Prediksi vs Aktual</h4>
                   </div>
                   <div class="card-body">
                     <div id="lineChartPendapatan"></div>
                   </div>
                 </div>
               </div>
-              <div class="col-8 col-xl-6">
+              <!-- Chart Modal -->
+              <div class="col-12 col-xl-6">
                 <div class="card">
                   <div class="card-header">
-                    <h4>Line Chart Modal</h4>
+                    <h4>Hasil Modal Prediksi vs Aktual</h4>
                   </div>
                   <div class="card-body">
                     <div id="lineChartModal"></div>
                   </div>
                 </div>
               </div>
-              <div class="col-8 col-xl-6">
-                <div class="card">
-                  <div class="card-header">
-                    <h4>Line Chart</h4>
-                  </div>
-                  <div class="card-body">
-                    <div id="lineChartAllData"></div>
-                  </div>
-                </div>
-              </div>
             </div>
           </section>
-
           {% endblock %}
         </div>
         <footer>
@@ -270,72 +274,54 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script>
-      $(document).ready(function () {
+      document.addEventListener("DOMContentLoaded", function () {
         $("#table1").DataTable();
+
+        var optionsPendapatan = {
+          chart: {
+            type: 'line'
+          },
+          series: [
+            {
+              name: 'Pendapatan Prediksi',
+              data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan|floatformat:0 }}, {% endfor %} ]
+            },
+            {
+              name: 'Pendapatan Aktual',
+              data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan_aktual|default:"null"|floatformat:0 }}, {% endfor %} ]
+            }
+          ],
+          xaxis: {
+            categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
+          }
+        };
+
+        var chartPendapatan = new ApexCharts(document.querySelector("#lineChartPendapatan"), optionsPendapatan);
+        chartPendapatan.render();
+
+        var optionsModal = {
+          chart: {
+            type: 'line'
+          },
+          series: [
+            {
+              name: 'Modal Prediksi',
+              data: [ {% for forecast in forecast_data %} {{ forecast.modal|floatformat:0 }}, {% endfor %} ]
+            },
+            {
+              name: 'Modal Aktual',
+              data: [ {% for forecast in forecast_data %} {{ forecast.modal_aktual|default:"null"|floatformat:0 }}, {% endfor %} ]
+            }
+          ],
+          xaxis: {
+            categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
+          }
+        };
+
+        var chartModal = new ApexCharts(document.querySelector("#lineChartModal"), optionsModal);
+        chartModal.render();
       });
     </script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-          // Grafik Pendapatan
-          var optionsPendapatan = {
-              chart: {
-                  type: 'line'
-              },
-              series: [{
-                  name: 'Pendapatan',
-                  data: [ {% for forecast in forecast_data %} {{ forecast.pendapatan|floatformat:0 }}, {% endfor %} ]
-              }],
-              xaxis: {
-                  categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
-              }
-          };
-      
-          var chartPendapatan = new ApexCharts(document.querySelector("#lineChartPendapatan"), optionsPendapatan);
-          chartPendapatan.render();
-      
-          // Grafik Modal
-          var optionsModal = {
-              chart: {
-                  type: 'line'
-              },
-              series: [{
-                  name: 'Modal',
-                  data: [ {% for forecast in forecast_data %} {{ forecast.modal|floatformat:0 }}, {% endfor %} ]
-              }],
-              xaxis: {
-                  categories: [ {% for forecast in forecast_data %} "{{ forecast.date|date:"M d, Y" }}", {% endfor %} ]
-              }
-          };
-      
-          var chartModal = new ApexCharts(document.querySelector("#lineChartModal"), optionsModal);
-          chartModal.render();
-      
-          // Grafik Data Januari - Juni 2024
-          var optionsAllData = {
-              chart: {
-                  type: 'line'
-              },
-              series: [{
-                  name: 'Pendapatan',
-                  data: [ {% for data in real_data_jan_to_jun_2024 %} {{ data.pendapatan|floatformat:0 }}, {% endfor %} ]
-              }, {
-                  name: 'Modal',
-                  data: [ {% for data in real_data_jan_to_jun_2024 %} {{ data.modal|floatformat:0 }}, {% endfor %} ]
-              }],
-              xaxis: {
-                  categories: [ {% for data in real_data_jan_to_jun_2024 %} "{{ data.date|date:"M d, Y" }}", {% endfor %} ],
-                  labels: {
-                      show: false 
-                  }
-              },
-              legend: {
-                  show: false
-              }
-          };
-      
-          var chartAllData = new ApexCharts(document.querySelector("#lineChartAllData"), optionsAllData);
-          chartAllData.render();
-      });
-      </script>
+
   </body>
 </html>

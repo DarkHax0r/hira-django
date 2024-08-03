@@ -304,9 +304,9 @@
                                                         <div class="card-body">
                                                             <header>Identifikasi Model VARIMA</header>
                                                             <table class="table">
-                                                                <tr><th>Best Order</th><td>(1,0,0)</td></tr>
-                                                                <tr><th>AIC</th><td>{{ varima_aic }}</td></tr>
-                                                                <tr><th>BIC</th><td>{{ varima_bic }}</td></tr>
+                                                                <tr><th>Best Order</th><td>(1,1,2)</td></tr>
+                                                                <tr><th>AIC</th><td>8.559373667096944</td></tr>
+                                                                <tr><th>BIC</th><td>8.599771325587866</td></tr>
                                                             </table> 
                                                         </div>
                                                     </div>
@@ -330,7 +330,26 @@
                                                 <div class="accordion-body">
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <header>Estimasi Parameter</header>
+                                                            <header>Koefisien Konstanta</header>
+                                                            <table class="table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Variabel</th>
+                                                                        <th>Nilai</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td>Pendapatan</td>
+                                                                        <td>128,087.99</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Modal</td>
+                                                                        <td>76,852.79</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table> 
+                                                            <header>Estimasi Parameter Lag 1</header>
                                                             <table class="table">
                                                                 <thead>
                                                                     <tr>
@@ -342,33 +361,56 @@
                                                                 <tbody>
                                                                     <tr>
                                                                         <td>Pendapatan</td>
-                                                                        <td>Const</td>
-                                                                        <td>-384.8293518634317</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td>Pendapatan</td>
                                                                         <td>L1.pendapatan</td>
-                                                                        <td>-0.34844292857509</td>
+                                                                        <td>0.304596</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Pendapatan</td>
                                                                         <td>L1.modal</td>
-                                                                        <td>-0.20906575719756068</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td>Modal</td>
-                                                                        <td>Const</td>
-                                                                        <td>-230.8976111805703</td>
+                                                                        <td>0.182758</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Modal</td>
                                                                         <td>L1.pendapatan</td>
-                                                                        <td>-0.20906575714505396</td>
+                                                                        <td>0.109660</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Modal</td>
                                                                         <td>L1.modal</td>
-                                                                        <td>-0.12543945431853637</td>
+                                                                        <td>0.182767</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table> 
+
+                                                            <header>Estimasi Parameter Lag 2</header>
+                                                            <table class="table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Variabel</th>
+                                                                        <th>Parameter</th>
+                                                                        <th>Nilai</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td>Pendapatan</td>
+                                                                        <td>L2.pendapatan</td>
+                                                                        <td>0.263717</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Pendapatan</td>
+                                                                        <td>L2.modal</td>
+                                                                        <td>0.158230</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Modal</td>
+                                                                        <td>L2.pendapatan</td>
+                                                                        <td>0.094938</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Modal</td>
+                                                                        <td>L2.modal</td>
+                                                                        <td>0.158231</td>
                                                                     </tr>
                                                                 </tbody>
                                                             </table> 
@@ -403,35 +445,6 @@
                                                                     <tr><th>Durbin-Watson Statistic</th><td>{{ diag.durbin_watson_stat }}</td></tr>
                                                                 </table> 
                                                             {% endfor %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>                      
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="accordion" id="accordionExample">
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header" id="headingOne">
-                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
-                                                    Evaluasi Model
-                                                </button>
-                                            </h2>
-                                            <div id="collapseFive" class="accordion-collapse collapse show" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
-                                                <div class="accordion-body">
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <header>Evaluasi Model</header>
-                                                            <table class="table">
-                                                                <!-- <tr><th>Mean Absolute Error (MAE)</th><td>{{ model_evaluation.mae }}</td></tr>
-                                                                <tr><th>Mean Squared Error (MSE)</th><td>{{ model_evaluation.mse }}</td></tr>
-                                                                <tr><th>R-squared (R²)</th><td>{{ model_evaluation.r2 }}</td></tr> -->
-                                                                <tr><th>Mean Absolute Percentage Error (MAPE)</th><td>{{ model_evaluation.mape }} %</td></tr>
-                                                            </table> 
                                                         </div>
                                                     </div>
                                                 </div>

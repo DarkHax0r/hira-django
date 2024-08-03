@@ -11,11 +11,16 @@ from statsmodels.tsa.stattools import adfuller
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 import statsmodels.tsa.api as tsa
-from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch, normal_ad
+from statsmodels.stats.diagnostic import acorr_ljungbox, het_breuschpagan, normal_ad
 from statsmodels.stats.stattools import durbin_watson
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
+from itertools import product
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from calendar import monthrange
 
 def load_data():
     data = ParfumData.objects.all().values("date", "pendapatan", "modal")
@@ -140,54 +145,67 @@ def dashboard_nama(request):
 
 @login_required
 def dashboard(request):
-    month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(7, 13)]
-    year_choices = list(range(2023, 2031))
-    penambahan = np.array([3000, -1000, 2000, 2000, -3000, 2000, -1000, 1500, 1000, 2500, 1500, -2000, 1200, 1000, 3000, 1500, -1000, -2000, 150, 300, 200, 1500, -200, -500, 2500])
+    month_choices = [(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)]
+    year_choices = list(range(2022, 2025))
 
     if request.method == "POST":
         month = int(request.POST.get("month"))
-        year = 2024
+        year = int(request.POST.get("year"))
         df = load_data()
 
-        start_date = df.index[-1] + timedelta(days=1)
-        if month < 12:
-            end_date = datetime(year, month + 1, 1) - timedelta(days=1)
-        else:
-            end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
+        # Ensure the DataFrame contains the necessary date range
+        prediction_date = datetime(year, month, 1)
+        start_date = prediction_date - timedelta(days=11*30)
+        end_date = prediction_date - timedelta(days=1)
+        df_filtered = df[start_date:end_date]
 
-        total_days = (end_date - start_date).days + 1
+        print(df_filtered.head())  # Debugging: Check the filtered DataFrame
 
-        forecast_data = analyze_data(df, steps=total_days)
+        days_in_month = monthrange(year, month)[1]
+        forecast_data = analyze_data(df_filtered, steps=days_in_month)
 
         forecast_data = forecast_data.reset_index()
         forecast_data.columns = ["date", "pendapatan", "modal"]
 
-        # Repeat the penambahan array to match the length of forecast data
+        # Simulate some data changes (assuming penambahan is predefined)
+        penambahan = np.array([3000, -1000, 2000, 2000, -3000, 2000, -1000, 1500, 1000, 2500, 1500, -2000, 1200, 1000, 3000, 1500, -1000, -2000, 150, 300, 200, 1500, -200, -500, 2500])
         repeat_count = (len(forecast_data) + len(penambahan) - 1) // len(penambahan)
         extended_penambahan = np.tile(penambahan, repeat_count)[:len(forecast_data)]
 
-        # Add the extended_penambahan array to forecast pendapatan and modal
         forecast_data["pendapatan"] += extended_penambahan
         forecast_data["modal"] += extended_penambahan
 
         forecast_data["date"] = pd.to_datetime(forecast_data["date"])
         forecast_data_filtered = forecast_data[
-            (forecast_data["date"].dt.month == month)
-            & (forecast_data["date"].dt.year == year)
+            (forecast_data["date"].dt.month == month) & (forecast_data["date"].dt.year == year)
         ]
         forecast_data_dict = forecast_data_filtered.to_dict("records")
 
-        # Ambil data asli dari Januari 2024 hingga Juni 2024
-        real_data = df[(df.index.year == 2024) & (df.index.month >= 1) & (df.index.month <= 6)]
-        real_data_jan_to_jun_2024 = real_data.reset_index()
-        real_data_jan_to_jun_2024.columns = ["date", "pendapatan", "modal"]
-        real_data_jan_to_jun_2024_dict = real_data_jan_to_jun_2024.to_dict("records")
+        real_data = df[
+            (df.index.month == month) & (df.index.year == year)
+        ]
+        real_data.reset_index(inplace=True)
+        real_data_dict = real_data.to_dict("records")
+
+        # Adding actual data to the forecast data dictionary
+        for forecast in forecast_data_dict:
+            forecast_date = forecast["date"].date()
+            actual_data = next((item for item in real_data_dict if item["date"].date() == forecast_date), None)
+            forecast["pendapatan_aktual"] = actual_data["pendapatan"] if actual_data else None
+            forecast["modal_aktual"] = actual_data["modal"] if actual_data else None
+
+        # Calculate MAPE
+        mape_pendapatan = calculate_mape([f["pendapatan"] for f in forecast_data_dict if f["pendapatan_aktual"] is not None], 
+                                         [f["pendapatan_aktual"] for f in forecast_data_dict if f["pendapatan_aktual"] is not None])
+        mape_modal = calculate_mape([f["modal"] for f in forecast_data_dict if f["modal_aktual"] is not None], 
+                                    [f["modal_aktual"] for f in forecast_data_dict if f["modal_aktual"] is not None])
 
         context = {
             "forecast_data": forecast_data_dict,
             "month_choices": month_choices,
             "year_choices": year_choices,
-            "real_data_jan_to_jun_2024": real_data_jan_to_jun_2024_dict,
+            "mape_pendapatan": mape_pendapatan,
+            "mape_modal": mape_modal,
         }
         return render(request, "dashboard/dashboard.html", context)
 
@@ -195,9 +213,13 @@ def dashboard(request):
         "forecast_data": [],
         "month_choices": month_choices,
         "year_choices": year_choices,
-        "real_data_jan_to_jun_2024": [],
     }
     return render(request, "dashboard/dashboard.html", context)
+
+def calculate_mape(predicted, actual):
+    predicted = np.array(predicted)
+    actual = np.array(actual)
+    return np.mean(np.abs((actual - predicted) / actual)) * 100
 
 
 
@@ -219,19 +241,11 @@ def laporan(request):
         else:
             varima_params = None
 
-        mape = 39.687687654654
         diagnostics = diagnostic_model(varima_results) if varima_results is not None else {}
 
         if varima_results is not None:
             df['prediction'] = varima_results.fittedvalues.sum(axis=1)
             df_eval = df.dropna()
-
-            mae = mean_absolute_error(df_eval['pendapatan'], df_eval['prediction'])
-            mse = mean_squared_error(df_eval['pendapatan'], df_eval['prediction'])
-            r2 = r2_score(df_eval['pendapatan'], df_eval['prediction'])
-            mapee = mean_absolute_percentage_error(df_eval['pendapatan'], df_eval['prediction']) * 100
-        else:
-            mae = mse = r2 = mapee = None
 
         context = {
             "parfum": data,
@@ -239,16 +253,8 @@ def laporan(request):
             "adf_modal": adf_modal,
             "adf_pendapatan_diff": adf_pendapatan_diff,
             "adf_modal_diff": adf_modal_diff,
-            "varima_aic": varima_aic,
-            "varima_bic": varima_bic,
             "varima_params": varima_params.to_dict() if varima_params is not None else {},
             "diagnostics": diagnostics,
-            "model_evaluation": {
-                "mae": mae,
-                "mse": mse,
-                "r2": r2,
-                "mape": mape,
-            },
         }
 
     except KeyError as e:
@@ -283,33 +289,18 @@ def analyze_data(df, steps):
     scaler = StandardScaler()
     df_scaled = pd.DataFrame(scaler.fit_transform(df), columns=df.columns, index=df.index)
 
-    # Differencing to remove trend
-    df_diff = df_scaled.diff().dropna()
-
-    # Fit the VARMAX model
-    try:
-        model = VARMAX(df_diff, order=(0, 1), trend="c", error_cov_type="diagonal")
-        model_fitted = model.fit(disp=False)
-    except np.linalg.LinAlgError:
-        # In case of a non-positive definite matrix, add regularization
-        model = VARMAX(df_diff, order=(0, 1), trend="c", error_cov_type="diagonal")
-        model_fitted = model.fit(disp=False)
+    # Fit the VARMAX model without differencing
+    order = (2, 1)
+    model = VARMAX(df_scaled, order=order, trend='c', error_cov_type='diagonal')
+    model_fitted = model.fit(disp=False)
 
     # Forecast
     fc = model_fitted.get_forecast(steps=steps)
     df_forecast = fc.predicted_mean
-    df_forecast = pd.DataFrame(df_forecast, index=pd.date_range(start=df.index[-1] + timedelta(days=1), periods=steps, freq="D"), columns=df.columns)
-
-    def invert_transformation(df_train, df_forecast):
-        df_fc = df_forecast.copy()
-        for col in df_train.columns:
-            df_fc[col] = df_train[col].iloc[-1] + df_fc[col].cumsum()
-        return df_fc
-
-    df_results = invert_transformation(df_scaled, df_forecast)
+    df_forecast = pd.DataFrame(df_forecast, index=pd.date_range(start=df.index[-1] + timedelta(days=1), periods=steps, freq='D'), columns=df.columns)
 
     # Reverse normalization
-    df_results = pd.DataFrame(scaler.inverse_transform(df_results), columns=df.columns, index=df_results.index)
+    df_results = pd.DataFrame(scaler.inverse_transform(df_forecast), columns=df.columns, index=df_forecast.index)
 
     return df_results
 
@@ -413,3 +404,53 @@ def update_password(request):
         else:
             messages.error(request, "Password tidak cocok!")
     return redirect("profile")
+
+# Function to fit VARIMA model and return model results
+def fit_varima_model(data, p, q):
+    try:
+        model = VAR(data)
+        results = model.fit(maxlags=p, ic=None)  # Fit model with maxlags
+        aic = results.aic
+        bic = results.bic
+        return aic, bic, results
+    except Exception as e:
+        print(f"Error for p={p}, q={q}: {e}")
+        return np.inf, np.inf, None
+
+# Load your data
+df = load_data()
+
+# Define range for p and q
+p_values = range(1, 4)  # Adjust the range as necessary
+q_values = range(1, 4)  # Adjust the range as necessary
+
+# Find the best (p, q) combination
+best_aic = np.inf
+best_bic = np.inf
+best_order_aic = None
+best_order_bic = None
+best_model_aic = None
+best_model_bic = None
+
+for p, q in product(p_values, q_values):
+    aic, bic, model = fit_varima_model(df, p, q)
+    if aic < best_aic:
+        best_aic = aic
+        best_order_aic = (p, q)
+        best_model_aic = model
+    if bic < best_bic:
+        best_bic = bic
+        best_order_bic = (p, q)
+        best_model_bic = model
+
+print(f"Best AIC: {best_aic} with order {best_order_aic}")
+print(f"Best BIC: {best_bic} with order {best_order_bic}")
+
+# Print parameter estimates for the best model
+if best_model_aic is not None:
+    print("Best model parameters based on AIC:")
+    print(best_model_aic.params)
+
+if best_model_bic is not None:
+    print("Best model parameters based on BIC:")
+    print(best_model_bic.params)
