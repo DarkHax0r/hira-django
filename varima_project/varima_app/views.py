@@ -15,11 +15,7 @@ from statsmodels.stats.diagnostic import acorr_ljungbox, het_breuschpagan, norma
 from statsmodels.stats.stattools import durbin_watson
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
 from itertools import product
-import scipy.stats as stats
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
 from calendar import monthrange
 
 def load_data():
